@@ -1,0 +1,6 @@
+To run the code, use the classifier.py file
+The file is currently set up to create a few different types of models (decision tree, random tree, svm, etc)
+The file only currently runs one at a time. It is set up to run random forest with oob, because that was the best performing model.
+Feel free to swap out for other models and run them
+Hyperparameters should all be accessible from classifier.py
+The code will dump the predictions out into predictions.csv
