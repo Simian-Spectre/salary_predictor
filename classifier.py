@@ -170,7 +170,7 @@ if __name__ =='__main__':
 
     # Models to use
     tree = DecisionTree(max_depth=10, min_samples_leaf=1, min_information_gain=0.01)
-    forest = RandomForestClassifier(n_base_learner=50, numb_of_features_splitting="sqrt")
+    forest = RandomForestClassifier(n_base_learner=2000, max_depth = 25,numb_of_features_splitting="sqrt")
     ada = AdaBoostClassifier(n_base_learner=10)
     svm = PrimalSVM(400, init_learning_rate=0.01, lr_func='a', max_epochs=100)
 

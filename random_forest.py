@@ -4,10 +4,7 @@ from decision_tree import DecisionTree
 class RandomForestClassifier():
     """
     Random Forest Classifier
-    Training: Use "train" function with train set features and labels
-    Predicting: Use "predict" function with test set features
     """
-
     def __init__(self, n_base_learner=10, max_depth=5, min_samples_leaf=1, min_information_gain=0.0, \
                  numb_of_features_splitting=None, bootstrap_sample_size=None) -> None:
         self.n_base_learner = n_base_learner
@@ -19,9 +16,6 @@ class RandomForestClassifier():
         self.tree_oob_errors = []
 
     def _create_bootstrap_samples(self, X, Y) -> tuple:
-        """
-        Creates bootstrap samples for each base learner
-        """
         bootstrap_samples_X = []
         bootstrap_samples_Y = []
         oob_indices = []
@@ -40,7 +34,6 @@ class RandomForestClassifier():
         return bootstrap_samples_X, bootstrap_samples_Y, oob_indices
 
     def train(self, X_train: np.array, Y_train: np.array) -> None:
-        """Trains the model with given X and Y datasets"""
         bootstrap_samples_X, bootstrap_samples_Y, oob_indices = self._create_bootstrap_samples(X_train, Y_train)
 
         self.oob_indices = oob_indices
@@ -68,15 +61,10 @@ class RandomForestClassifier():
         self.feature_importances = self._calculate_rf_feature_importance(self.base_learner_list)
 
     def train_with_oob(self, X_train, Y_train):
-        """Train the model and compute OOB error."""
         self.train(X_train, Y_train)
         oob_error = self.calculate_oob_error(X_train, Y_train)
-        print(f"OOB Error: {oob_error:.4f}")
 
     def calculate_oob_error(self, X: np.array, Y: np.array) -> float:
-        """
-        Calculates the Out-of-Bag (OOB) error.
-        """
         n_samples = X.shape[0]
         oob_predictions = np.zeros((n_samples, self.n_base_learner))
 
@@ -84,14 +72,11 @@ class RandomForestClassifier():
             oob_idx = self.oob_indices[i]
 
             if len(oob_idx) > 0:
-                # Predict probabilities for OOB samples
                 pred_probs = base_learner.predict_proba(X[oob_idx])
                 oob_predictions[oob_idx, i] = np.argmax(pred_probs, axis=1)
 
-        # Aggregate predictions by majority voting
         aggregated_predictions = []
         for sample_idx in range(n_samples):
-            # Ignore samples without OOB predictions
             nonzero_predictions = oob_predictions[sample_idx][oob_predictions[sample_idx] != 0]
             if len(nonzero_predictions) > 0:
                 majority_vote = np.argmax(np.bincount(nonzero_predictions.astype(int)))
@@ -99,7 +84,6 @@ class RandomForestClassifier():
             else:
                 aggregated_predictions.append(-1)
 
-        # Calculate OOB error
         valid_indices = np.where(np.array(aggregated_predictions) != -1)[0]
         oob_error = 1 - np.mean(
             np.array(aggregated_predictions)[valid_indices] == Y[valid_indices]
@@ -107,10 +91,6 @@ class RandomForestClassifier():
         return oob_error
 
     def calculate_tree_weights(self):
-        """
-        Converts OOB errors into weights for each tree.
-        Trees with lower OOB errors get higher weights.
-        """
         almost_zero = 1e-10
         oob_errors = np.array(self.tree_oob_errors)
         tree_weights = 1 / (oob_errors + almost_zero)
@@ -119,9 +99,6 @@ class RandomForestClassifier():
 
 
     def _predict_proba_w_base_learners(self,  X_set: np.array) -> list:
-        """
-        Creates list of predictions for all base learners
-        """
         pred_prob_list = []
         for base_learner in self.base_learner_list:
             pred_prob_list.append(base_learner.predict_proba(X_set))
@@ -129,15 +106,11 @@ class RandomForestClassifier():
         return pred_prob_list
 
     def predict_proba(self, X_set: np.array) -> list:
-        """Returns the predicted probs for a given data set"""
-
         pred_probs = []
         base_learners_pred_probs = self._predict_proba_w_base_learners(X_set)
 
-        # Get weights for each tree
         tree_weights = self.calculate_tree_weights()
 
-        # Average the predicted probabilities of base learners
         for obs in range(X_set.shape[0]):
             base_learner_probs_for_obs = [a[obs] for a in base_learners_pred_probs]
             # Calculate the average for each index
@@ -147,7 +120,6 @@ class RandomForestClassifier():
         return pred_probs
 
     def predict(self, X_set: np.array, return_probabilities=False) -> np.array:
-        """Returns either the predicted probabilities or the predicted labels."""
         pred_probs = self.predict_proba(X_set)
 
         if return_probabilities:
@@ -157,7 +129,6 @@ class RandomForestClassifier():
             return preds
     
     def _calculate_rf_feature_importance(self, base_learners):
-        """Calcalates the average feature importance of the base learners"""
         feature_importance_dict_list = []
         for base_learner in base_learners:
             feature_importance_dict_list.append(base_learner.feature_importances)
